@@ -2,7 +2,7 @@
 
 A voice dictation tool for Linux using [faster-whisper](https://github.com/SYSTRAN/faster-whisper). 
 
-**Fork Note:** This is an enhanced fork of the original project, expanded to support **Void Linux**, **Runit**, and **PulseAudio/PipeWire**. It also features a **toggle recording** behavior (press to start, press to stop) instead of the original push-to-talk.
+**Fork Note:** This is an enhanced fork of [soupawhisper](https://github.com/ksred/soupawhisper), expanded to support **Void Linux**, **Runit**, and **PulseAudio/PipeWire**. It also features a **toggle recording** behavior (press to start, press to stop) instead of the original push-to-talk.
 
 ## Features
 
