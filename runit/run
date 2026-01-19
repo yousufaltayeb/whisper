@@ -1,0 +1,18 @@
+#!/bin/sh
+# Runit service script for SoupaWhisper
+exec 2>&1
+
+# Set environment
+export DISPLAY=:0
+export XAUTHORITY=/home/yousif/.Xauthority
+export XDG_RUNTIME_DIR=/run/user/1000
+
+cd "/home/yousif/TOP/soupawhisper"
+
+# Run as user yousif using chpst (if available) or fallback to direct execution
+if command -v chpst >/dev/null; then
+    exec chpst -u yousif .venv/bin/python dictate.py
+else
+    # Fallback for user-level supervisors
+    exec .venv/bin/python dictate.py
+fi
