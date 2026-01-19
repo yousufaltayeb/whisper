@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-SoupaWhisper - Voice dictation tool using faster-whisper.
+Whisper - Voice dictation tool using faster-whisper.
 Hold the hotkey to record, release to transcribe and copy to clipboard.
 """
 
@@ -20,7 +20,7 @@ from faster_whisper import WhisperModel
 __version__ = "0.1.0"
 
 # Load configuration
-CONFIG_PATH = Path.home() / ".config" / "soupawhisper" / "config.ini"
+CONFIG_PATH = Path.home() / ".config" / "whisper" / "config.ini"
 
 
 def load_config():
@@ -53,7 +53,7 @@ def load_config():
 
 CONFIG = load_config()
 
-LAST_RECORDING_PATH = Path.home() / ".cache" / "soupawhisper" / "last_recording.wav"
+LAST_RECORDING_PATH = Path.home() / ".cache" / "whisper" / "last_recording.wav"
 
 MODEL_SIZE = CONFIG["model"]
 DEVICE = CONFIG["device"]
@@ -103,13 +103,13 @@ class Dictation:
             [
                 "notify-send",
                 "-a",
-                "SoupaWhisper",
+                "Whisper",
                 "-i",
                 icon,
                 "-t",
                 str(timeout),
                 "-h",
-                "string:x-canonical-private-synchronous:soupawhisper",
+                "string:x-canonical-private-synchronous:whisper",
                 title,
                 message,
             ],
@@ -252,14 +252,14 @@ def check_dependencies():
 
 def main():
     parser = argparse.ArgumentParser(
-        description="SoupaWhisper - Push-to-talk voice dictation"
+        description="Whisper - Push-to-talk voice dictation"
     )
     parser.add_argument(
-        "-v", "--version", action="version", version=f"SoupaWhisper {__version__}"
+        "-v", "--version", action="version", version=f"Whisper {__version__}"
     )
     parser.parse_args()
 
-    print(f"SoupaWhisper v{__version__}")
+    print(f"Whisper v{__version__}")
     print(f"Config: {CONFIG_PATH}")
 
     check_dependencies()

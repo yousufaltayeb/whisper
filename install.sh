@@ -1,11 +1,11 @@
 #!/bin/bash
-# Install SoupaWhisper on Linux
+# Install Whisper on Linux
 # Supports: Ubuntu, Pop!_OS, Debian, Fedora, Arch, Void
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_DIR="$HOME/.config/soupawhisper"
+CONFIG_DIR="$HOME/.config/whisper"
 SERVICE_DIR="$HOME/.config/systemd/user"
 VENV_DIR="$SCRIPT_DIR/.venv"
 
@@ -133,9 +133,9 @@ install_systemd_service() {
     local display="${DISPLAY:-:0}"
     local xauthority="${XAUTHORITY:-$HOME/.Xauthority}"
     
-    cat > "$SERVICE_DIR/soupawhisper.service" << EOF
+    cat > "$SERVICE_DIR/whisper.service" << EOF
 [Unit]
-Description=SoupaWhisper Voice Dictation
+Description=Whisper Voice Dictation
 After=graphical-session.target
 
 [Service]
@@ -153,18 +153,18 @@ Environment=XAUTHORITY=$xauthority
 WantedBy=default.target
 EOF
 
-    echo "Created service at $SERVICE_DIR/soupawhisper.service"
+    echo "Created service at $SERVICE_DIR/whisper.service"
 
     # Reload and enable
     systemctl --user daemon-reload
-    systemctl --user enable soupawhisper
+    systemctl --user enable whisper
 
     echo ""
     echo "Service installed! Commands:"
-    echo "  systemctl --user start soupawhisper   # Start"
-    echo "  systemctl --user stop soupawhisper    # Stop"
-    echo "  systemctl --user status soupawhisper  # Status"
-    echo "  journalctl --user -u soupawhisper -f  # Logs"
+    echo "  systemctl --user start whisper   # Start"
+    echo "  systemctl --user stop whisper    # Stop"
+    echo "  systemctl --user status whisper  # Status"
+    echo "  journalctl --user -u whisper -f  # Logs"
 }
 
 # Install runit service (Void Linux)
@@ -184,7 +184,7 @@ install_runit_service() {
 
     cat > "$run_file" << EOF
 #!/bin/sh
-# Runit service script for SoupaWhisper
+# Runit service script for Whisper
 exec 2>&1
 
 # Set environment
@@ -208,16 +208,16 @@ EOF
     echo ""
     echo "To enable this service:"
     echo "1. System Service (runs on boot, requires sudo):"
-    echo "   sudo ln -s $runit_dir /var/service/soupawhisper"
+    echo "   sudo ln -s $runit_dir /var/service/whisper"
     echo ""
     echo "2. User Service (requires user runsvdir):"
-    echo "   ln -s $runit_dir ~/service/soupawhisper"
+    echo "   ln -s $runit_dir ~/service/whisper"
 }
 
 # Main
 main() {
     echo "==================================="
-    echo "  SoupaWhisper Installer"
+    echo "  Whisper Installer"
     echo "==================================="
     echo ""
 

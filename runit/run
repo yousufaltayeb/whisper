@@ -1,5 +1,5 @@
 #!/bin/sh
-# Runit service script for SoupaWhisper
+# Runit service script for Whisper
 exec 2>&1
 
 # Set environment
@@ -7,7 +7,7 @@ export DISPLAY=:0
 export XAUTHORITY=/home/yousif/.Xauthority
 export XDG_RUNTIME_DIR=/run/user/1000
 
-cd "/home/yousif/TOP/soupawhisper"
+cd "/home/yousif/TOP/whisper"
 
 # Run as user yousif using chpst (if available) or fallback to direct execution
 if command -v chpst >/dev/null; then
