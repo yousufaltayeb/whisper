@@ -156,14 +156,14 @@ export const SETTINGS: readonly SettingSpec[] = [
   {
     key: "sounds.start",
     label: "Start sound",
-    description: "Play an audible capture-start cue when the platform adapter is available.",
+    description: "Play a brief rising cue once the microphone is listening.",
     kind: "choice",
     choices: ON_OFF,
   },
   {
     key: "sounds.stop",
     label: "Stop sound",
-    description: "Play an audible capture-stop cue when the platform adapter is available.",
+    description: "Play a brief resolving cue after the microphone is released.",
     kind: "choice",
     choices: ON_OFF,
   },

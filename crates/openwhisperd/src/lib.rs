@@ -15,7 +15,7 @@ use openwhisper_core::processing::TextProcessor;
 use openwhisper_core::streaming::STREAM_BATCH_BYTES;
 use openwhisper_core::{
     AppConfig, AppPaths, CaptureCoordinator, HistoryInput, InferenceBackend, InstalledModel, Mode,
-    OverlayMode, StateStore, TranscriptStabilizer, detect_capabilities,
+    OverlayMode, SoundCue, StateStore, TranscriptStabilizer, detect_capabilities, play_sound_cue,
 };
 use openwhisper_protocol::{
     BenchmarkStatus, ErrorCode, InsertionStatus, Language, ModelDownloadProgress, ModelInfo,
@@ -41,6 +41,7 @@ pub struct DaemonState {
     pub capture: Arc<Mutex<CaptureCoordinator>>,
     runtime: Arc<AsyncMutex<RuntimeOwner>>,
     processing: Arc<Mutex<Option<JoinHandle<()>>>>,
+    cue_playback: Arc<Mutex<Option<JoinHandle<()>>>>,
     results: Arc<Mutex<HashMap<Uuid, CachedResult>>>,
     result_errors: Arc<Mutex<HashMap<Uuid, (Instant, RpcError)>>>,
     result_ready: Arc<Mutex<HashMap<Uuid, Arc<Notify>>>>,
@@ -116,6 +117,7 @@ impl DaemonState {
                 worker: None,
             })),
             processing: Arc::new(Mutex::new(None)),
+            cue_playback: Arc::new(Mutex::new(None)),
             results: Arc::new(Mutex::new(HashMap::new())),
             result_errors: Arc::new(Mutex::new(HashMap::new())),
             result_ready: Arc::new(Mutex::new(HashMap::new())),
@@ -495,6 +497,7 @@ impl DaemonState {
             }
         }
         self.emit("recording.changed", state);
+        self.play_capture_cue(SoundCue::ListeningStarted);
         self.emit(
             "recording.level",
             json!({
@@ -862,6 +865,7 @@ impl DaemonState {
         // inference to be replaced. Otherwise a slow CPU worker can append seconds of trailing
         // silence while it is shutting down and distort the canonical final transcript.
         let audio_path = recorder.stop().await.map_err(audio_rpc_error)?;
+        self.play_capture_cue(SoundCue::ListeningStopped);
         if let Some(level_monitor) = level_monitor {
             level_monitor.abort();
         }
@@ -941,13 +945,19 @@ impl DaemonState {
             .take()
             .and_then(|live| live.lock().ok().map(|live| live.inserted_bytes))
             .unwrap_or(0);
-        if let Some(recorder) = runtime.recorder.take() {
+        let stopped_listening = if let Some(recorder) = runtime.recorder.take() {
             recorder.cancel().await;
-        }
+            true
+        } else {
+            false
+        };
         if let Some(worker) = runtime.worker.as_mut() {
             let _ = worker.restart().await;
         }
         drop(runtime);
+        if stopped_listening {
+            self.play_capture_cue(SoundCue::ListeningStopped);
+        }
         self.emit("recording.changed", json!({"phase": "idle"}));
         self.emit(
             "insertion.state",
@@ -2710,6 +2720,32 @@ impl DaemonState {
             .map_err(|_| internal("config state is poisoned"))?;
         update(&mut config);
         config.save(&self.paths.config_file()).map_err(internal)
+    }
+
+    fn play_capture_cue(&self, cue: SoundCue) {
+        #[cfg(any(test, feature = "test-capture"))]
+        if self.test_capture {
+            return;
+        }
+
+        let Ok(mut playback) = self.cue_playback.lock() else {
+            return;
+        };
+        if let Some(previous) = playback.take() {
+            previous.abort();
+        }
+        let enabled = self.config.read().ok().is_some_and(|config| match cue {
+            SoundCue::ListeningStarted => config.sounds.start,
+            SoundCue::ListeningStopped => config.sounds.stop,
+        });
+        if !enabled {
+            return;
+        }
+        *playback = Some(tokio::spawn(async move {
+            if let Err(error) = play_sound_cue(cue).await {
+                tracing::debug!(cue = cue.label(), error = %error, "capture cue was unavailable");
+            }
+        }));
     }
 
     fn emit(&self, event: &str, data: Value) {
